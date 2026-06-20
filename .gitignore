@@ -87,6 +87,4 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-# Generated makefiles
-makefile
 cmake-build-*/
