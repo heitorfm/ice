@@ -2,6 +2,8 @@
 
 A C++ parser for the Ice configuration language - a domain-specific language (DSL) for defining structured configuration files with support for sections, assignments, arrays, objects, functions, and control flow statements.
 
+![Ice configuration syntax highlight](docs/assets/app-settings-syntax-highlight.png)
+
 ## Features
 
 - **Sections**: Organize configuration into hierarchical sections
