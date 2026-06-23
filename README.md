@@ -4,10 +4,6 @@ A C++ parser for the Ice configuration language - a domain-specific language (DS
 
 ![Ice configuration syntax highlight](docs/assets/app-settings-syntax-highlight.png)
 
-## Memory Safety
-
-![Valgrind report](docs/assets/valgrind.png)
-
 ## Features
 
 - **Sections**: Organize configuration into hierarchical sections
@@ -150,7 +146,7 @@ src/
 ├── DebugParser.hpp/cpp  # Debug output utilities
 ├── StrUtil.hpp/cpp      # String utilities
 ├── IntUtil.hpp/cpp      # Integer parsing utilities
-├── IceApi.re            # Lexer definition (re2c)
+├── IceApi.re.cpp        # Lexer definition (re2c)
 ├── icelang.y            # Parser grammar (Lemon)
 └── main.cpp             # Example usage
 gen/                     # Generated source files
@@ -166,6 +162,12 @@ Makefile                # Build configuration
 README.md               # This file
 improvements.md         # Known issues and improvements
 ```
+
+## Memory Safety
+
+The test suite is regularly checked with Valgrind. The report below shows the current parser test run completing with all heap blocks freed and no memory errors.
+
+![Valgrind report](docs/assets/valgrind.png)
 
 ## Development
 

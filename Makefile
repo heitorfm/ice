@@ -4,7 +4,7 @@
 
 # Project configuration
 PROJECT=icelang
-RULESDEF=src/IceApi.re
+RULESDEF=src/IceApi.re.cpp
 BUILD_DIR=build
 GEN_DIR=gen
 DIST_DIR=dist
