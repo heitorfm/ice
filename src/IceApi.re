@@ -4,6 +4,7 @@
 #include <memory>
 #include <sstream>
 #include <string.h>
+#include <utility>
 #include <vector>
 #include "../gen/icelang.h"
 #include "StrUtil.hpp"
@@ -245,9 +246,6 @@ std::unique_ptr<IceParserResult> internalParseFile(FILE *fp, const IceParserPara
     Scanner scanner;
     void *parser;
 
-    std::vector<char> stringBuffer;
-    int strBufIni = 0;
-
     if (fseek(fp, 0, SEEK_END) != 0) {
         return makeErrorResult(IceErrorCode::ReadError, "Could not seek file");
     }
@@ -258,7 +256,6 @@ std::unique_ptr<IceParserResult> internalParseFile(FILE *fp, const IceParserPara
     }
 
     rewind(fp);
-    stringBuffer.resize(static_cast<size_t>(size) * 2 + 1);
 
 	std::vector<char> inputBuffer(static_cast<size_t>(size));
     bytes = fread(inputBuffer.data(), 1, inputBuffer.size(), fp);
@@ -306,105 +303,73 @@ std::unique_ptr<IceParserResult> internalParseFile(FILE *fp, const IceParserPara
         }
 
 		if(token == ICE_DECL || token == REALM_DECL) {
-			int stringLength = scanner.cur - scanner.top;
-			strncpy(&stringBuffer[strBufIni], scanner.top, stringLength);
-			stringBuffer[strBufIni + stringLength] = '\0';
+			std::string tokenText(scanner.top, scanner.cur - scanner.top);
 
 			if (context.params.debugParser) {
-				std::cout << &stringBuffer[strBufIni] << std::endl;
+				std::cout << tokenText << std::endl;
 			}
 
-			Token* curToken = new Token{token, &stringBuffer[strBufIni]};
+			Token* curToken = context.keepToken(token, std::move(tokenText));
 
 			int res = Parse(parser, token, curToken, &context);
 			isRunning = treatError(context, scanner);
-
-			strBufIni += stringLength + 1;
 
 		} else if(token == STRING_LITERAL) {
 
-			int stringLength = scanner.cur - scanner.top;
-			strncpy(&stringBuffer[strBufIni], scanner.top, stringLength);
-			stringBuffer[strBufIni + stringLength] = '\0';
-
-			Token* curToken = new Token{token, &stringBuffer[strBufIni]};
+			std::string tokenText(scanner.top, scanner.cur - scanner.top);
+			Token* curToken = context.keepToken(token, std::move(tokenText));
 
 			int res = Parse(parser, token, curToken, &context);
 			isRunning = treatError(context, scanner);
-
-			strBufIni += stringLength + 1;
 
 		} else if(token == INT_LITERAL) {
 
-			int stringLength = scanner.cur - scanner.top;
-			strncpy(&stringBuffer[strBufIni], scanner.top, stringLength);
-			stringBuffer[strBufIni + stringLength] = '\0';
-
-			Token* curToken = new Token{token, &stringBuffer[strBufIni]};
+			std::string tokenText(scanner.top, scanner.cur - scanner.top);
+			Token* curToken = context.keepToken(token, std::move(tokenText));
 
 			int res = Parse(parser, token, curToken, &context);
 			isRunning = treatError(context, scanner);
-			strBufIni += stringLength + 1;
 
 		} else if(token == FALSE || token == TRUE) {
 
-			int stringLength = scanner.cur - scanner.top;
-			strncpy(&stringBuffer[strBufIni], scanner.top, stringLength);
-			stringBuffer[strBufIni + stringLength] = '\0';
-
-			Token* curToken = new Token{token, &stringBuffer[strBufIni]};
+			std::string tokenText(scanner.top, scanner.cur - scanner.top);
+			Token* curToken = context.keepToken(token, std::move(tokenText));
 
 			int res = Parse(parser, token, curToken, &context);
 			isRunning = treatError(context, scanner);
-			strBufIni += stringLength + 1;
 
 		} else if(token == DOUBLE1 || token == DOUBLE2) {
 
-			int stringLength = scanner.cur - scanner.top;
-			strncpy(&stringBuffer[strBufIni], scanner.top, stringLength);
-			stringBuffer[strBufIni + stringLength] = '\0';
-
-			Token* curToken = new Token{token, &stringBuffer[strBufIni]};
+			std::string tokenText(scanner.top, scanner.cur - scanner.top);
+			Token* curToken = context.keepToken(token, std::move(tokenText));
 
 			int res = Parse(parser, token, curToken, &context);
 			isRunning = treatError(context, scanner);
-			strBufIni += stringLength + 1;
 
 		} else if(token == SECTION) {
 
-			int stringLength = scanner.cur - scanner.top;
-			strncpy(&stringBuffer[strBufIni], scanner.top, stringLength);
-			stringBuffer[strBufIni + stringLength] = '\0';
-
-			Token* curToken = new Token{token, &stringBuffer[strBufIni]};
+			std::string tokenText(scanner.top, scanner.cur - scanner.top);
+			Token* curToken = context.keepToken(token, std::move(tokenText));
 
 			int res = Parse(parser, token, curToken, &context);
 			isRunning = treatError(context, scanner);
-			strBufIni += stringLength + 1;
 
 		} else if(token == IDENTIF) {
-			int stringLength = scanner.cur - scanner.top;
-			strncpy(&stringBuffer[strBufIni], scanner.top, stringLength);
-			stringBuffer[strBufIni + stringLength] = '\0';
 
-			Token* curToken = new Token{token, &stringBuffer[strBufIni]};
+			std::string tokenText(scanner.top, scanner.cur - scanner.top);
+			Token* curToken = context.keepToken(token, std::move(tokenText));
 
 			int res = Parse(parser, token, curToken, &context);
 			isRunning = treatError(context, scanner);
-			strBufIni += stringLength + 1;
 
 		} else if(token == STRING_START || token == STRING_LITERAL ||
 				  token == STRING_END || token == VAR_START ||
 				  token == VAR_NAME || token == VAR_END) {
 
-			int stringLength = scanner.cur - scanner.top;
-			strncpy(&stringBuffer[strBufIni], scanner.top, stringLength);
-			stringBuffer[strBufIni + stringLength] = '\0';
-
-			Token* curToken = new Token{token, &stringBuffer[strBufIni]};
+			std::string tokenText(scanner.top, scanner.cur - scanner.top);
+			Token* curToken = context.keepToken(token, std::move(tokenText));
 			int res = Parse(parser, token, curToken, &context);
 			isRunning = treatError(context, scanner);
-			strBufIni += stringLength + 1;
 
 		} else if (token == LEX_ERROR) {
 			context.success = 0;

@@ -14,6 +14,8 @@
 
 namespace IceTests {
 
+using FilePtr = std::unique_ptr<FILE, decltype(&fclose)>;
+
 inline std::string fixturePath(const std::string& relativePath) {
 	return "tests/" + relativePath;
 }
@@ -24,7 +26,7 @@ inline std::unique_ptr<IceParserResult> parseFixture(
 	bool suppressErrors = false
 ) {
 	const std::string path = fixturePath(relativePath);
-	FILE* file = fopen(path.c_str(), "r");
+	FilePtr file(fopen(path.c_str(), "r"), fclose);
 	REQUIRE(file != nullptr);
 
 	std::ostringstream errorSink;
@@ -32,28 +34,25 @@ inline std::unique_ptr<IceParserResult> parseFixture(
 	std::streambuf* previousErrorBuffer = nullptr;
 	std::streambuf* previousOutputBuffer = nullptr;
 	int stderrCopy = -1;
-	FILE* nullFile = nullptr;
+	FilePtr nullFile(nullptr, fclose);
 	if (suppressErrors) {
 		previousErrorBuffer = std::cerr.rdbuf(errorSink.rdbuf());
 		previousOutputBuffer = std::cout.rdbuf(outputSink.rdbuf());
 		fflush(stderr);
 		stderrCopy = dup(fileno(stderr));
-		nullFile = fopen("/dev/null", "w");
+		nullFile.reset(fopen("/dev/null", "w"));
 		if (nullFile) {
-			dup2(fileno(nullFile), fileno(stderr));
+			dup2(fileno(nullFile.get()), fileno(stderr));
 		}
 	}
 
-	std::unique_ptr<IceParserResult> result = Ice::IceParser::parseFile(file, params);
+	std::unique_ptr<IceParserResult> result = Ice::IceParser::parseFile(file.get(), params);
 
 	if (suppressErrors) {
 		fflush(stderr);
 		if (stderrCopy >= 0) {
 			dup2(stderrCopy, fileno(stderr));
 			close(stderrCopy);
-		}
-		if (nullFile) {
-			fclose(nullFile);
 		}
 		std::cerr.rdbuf(previousErrorBuffer);
 		std::cout.rdbuf(previousOutputBuffer);

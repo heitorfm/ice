@@ -5,19 +5,25 @@
 # Project configuration
 PROJECT=icelang
 RULESDEF=src/IceApi.re
-GENERATED=gen/IceApi.cpp
-EXE=dist/ice
-TEST_EXE=dist/ice-tests
-CC=g++ -g
-LEXER=re2c
-CFLAGS=-std=c++17 -Wall -Wextra
 BUILD_DIR=build
 GEN_DIR=gen
 DIST_DIR=dist
+GENERATED=$(GEN_DIR)/IceApi.cpp
+EXE=$(DIST_DIR)/ice
+TEST_EXE=$(DIST_DIR)/ice-tests
+VALGRIND_IMAGE=ice-valgrind
+VALGRIND_CONTAINER=ice-valgrind-run
+VALGRIND_FLAGS=--leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1
+VALGRIND_LOG=$(DIST_DIR)/valgrind.log
+VALGRIND_REPORT_DIR=valgrind
+VALGRIND_REPORT=$(VALGRIND_REPORT_DIR)/valgrind.log
+CC=g++ -g
+LEXER=re2c
+CFLAGS=-std=c++17 -Wall -Wextra
 
 # Try to find lemon in common locations
 LEMON=$(shell which lemon 2>/dev/null || echo "lemon")
-LEMON_PAR=$(shell find /opt/homebrew -name "lempar.c" 2>/dev/null | head -1 || find /usr -name "lempar.c" 2>/dev/null | head -1 || find /opt -name "lempar.c" 2>/dev/null | head -1 || echo "/usr/share/lemon/lempar.c")
+LEMON_PAR=$(shell found=$$(find /opt/homebrew /usr /opt -name "lempar.c" 2>/dev/null | head -1); if [ -n "$$found" ]; then echo "$$found"; else echo "/usr/share/lemon/lempar.c"; fi)
 
 # Source files
 SOURCES = src/StrUtil.cpp src/Nodes.cpp src/DebugParser.cpp src/IceParser.cpp src/ConditionalResolver.cpp src/ReferenceResolver.cpp src/Resolver.cpp src/MathResolver.cpp src/CallableDescriptorBuilder.cpp src/DocumentBuilder.cpp
@@ -92,6 +98,26 @@ exec: cli
 test: $(TEST_EXE)
 	./$(TEST_EXE)
 
+# Build parser tests and run them under Valgrind
+valgrind: $(TEST_EXE)
+	@echo "Writing Valgrind report to $(VALGRIND_LOG)"
+	valgrind $(VALGRIND_FLAGS) --log-file=$(VALGRIND_LOG) ./$(TEST_EXE)
+	@echo "Valgrind report: $(VALGRIND_LOG)"
+
+# Build the Docker image used to run Valgrind in a Linux environment
+docker-valgrind-build:
+	docker build -f docker/valgrind.Dockerfile -t $(VALGRIND_IMAGE) .
+
+# Run Valgrind inside Docker using the source snapshot copied into the image
+docker-valgrind: docker-valgrind-build
+	mkdir -p $(VALGRIND_REPORT_DIR)
+	docker rm -f $(VALGRIND_CONTAINER) >/dev/null 2>&1 || true
+	docker run --name $(VALGRIND_CONTAINER) $(VALGRIND_IMAGE) sh -lc 'make clean && make valgrind'; \
+	status=$$?; \
+	docker cp $(VALGRIND_CONTAINER):/work/$(VALGRIND_LOG) $(VALGRIND_REPORT) >/dev/null 2>&1 || true; \
+	docker rm -f $(VALGRIND_CONTAINER) >/dev/null 2>&1 || true; \
+	exit $$status
+
 # =============================================================================
 # Library and Executable Rules
 # =============================================================================
@@ -138,8 +164,10 @@ help:
 	@echo "  cli     - Build the CLI executable (dist/ice)"
 	@echo "  exec    - Build and run dist/ice with test.ice"
 	@echo "  test    - Build and run parser behavior tests"
+	@echo "  valgrind          - Run parser behavior tests under Valgrind and write dist/valgrind.log"
+	@echo "  docker-valgrind   - Build Docker image, run Valgrind inside it, and copy the report to valgrind/"
 	@echo "  clean   - Remove build artifacts"
 	@echo "  help    - Show this help message"
 	@echo ""
 
-.PHONY: all lib cli exec test build main clean distclean help
+.PHONY: all lib cli exec test valgrind docker-valgrind-build docker-valgrind build main clean distclean help

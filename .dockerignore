@@ -1,0 +1,17 @@
+.DS_Store
+.git/
+.idea/
+build/
+dist/
+gen/
+valgrind/
+.docker-build/
+trace.out
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.dSYM/

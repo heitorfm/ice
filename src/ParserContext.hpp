@@ -1,6 +1,7 @@
 #ifndef PARSERCONTEXT_HPP
 #define PARSERCONTEXT_HPP
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -15,7 +16,13 @@ struct ParserContext {
 	SectionNodeList* astSections = nullptr;
 	IceParserParams params;
 	bool success = 1;
-	std::vector<char*> options; // syntax error options
+	std::vector<std::string> options; // syntax error options
+	std::vector<std::unique_ptr<Token>> tokens;
+
+	Token* keepToken(int type, std::string content) {
+		tokens.push_back(std::make_unique<Token>(Token{type, std::move(content)}));
+		return tokens.back().get();
+	}
 
 	template<typename T, typename... Args>
 	T* newObject(Args&&... args) {

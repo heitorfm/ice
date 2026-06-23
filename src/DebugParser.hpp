@@ -9,7 +9,7 @@ namespace Ice {
 
 	class DebugParser {
 	public:
-		static void printAssignment(Token* ident, DataValue* value);
+		static void printAssignment(const Token& ident, DataValue* value);
 
 		static void printAssignment(const char* name, DataValue* value, int level);
 

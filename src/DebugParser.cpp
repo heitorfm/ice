@@ -16,8 +16,8 @@ static std::string formatStringValue(StringValue* stringValue) {
 	return stringValue->text();
 }
 
-void Ice::DebugParser::printAssignment(Token* ident, DataValue* value) {
-    printAssignment(ident->content, value, 0);
+void Ice::DebugParser::printAssignment(const Token& ident, DataValue* value) {
+    printAssignment(ident.content.c_str(), value, 0);
 }
 void Ice::DebugParser::printAssignment(const char* name, DataValue* value, int level) {
 

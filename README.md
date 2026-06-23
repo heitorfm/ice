@@ -4,6 +4,10 @@ A C++ parser for the Ice configuration language - a domain-specific language (DS
 
 ![Ice configuration syntax highlight](docs/assets/app-settings-syntax-highlight.png)
 
+## Memory Safety
+
+![Valgrind report](docs/assets/valgrind.png)
+
 ## Features
 
 - **Sections**: Organize configuration into hierarchical sections

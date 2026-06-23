@@ -140,7 +140,7 @@
 		a = yy_find_shift_action((YYCODETYPE)i, yypParser->yytos->stateno);
 		if (a != YY_ERROR_ACTION) {
 				if(context->params.debugParser) printf("possible token: %s\n", yyTokenName[i]);
-				context->options.push_back(strdup(yyTokenName[i]));
+				context->options.push_back(yyTokenName[i]);
 		}
 	}
 
@@ -169,7 +169,7 @@ conf(CONF) ::= ICE_DECL(ICE) REALM_DECL(REA) section_list(SL) END_TOKEN. {
 /********************************************************/
 
 	section(SEC) ::= SECTION(A) LBRACE section_body(Body) RBRACE. {
-	    SEC = context->newSection(A->content, Body->sections, Body->statements);
+	    SEC = context->newSection(A->content.c_str(), Body->sections, Body->statements);
 	    if(context->params.debugParser) Ice::DebugParser::printSection(SEC);
 	}
 
@@ -224,21 +224,21 @@ conf(CONF) ::= ICE_DECL(ICE) REALM_DECL(REA) section_list(SL) END_TOKEN. {
 
 	string_parts(SV) ::= STRING_LITERAL(S). {
 	    SV = context->newStringValue();
-	    SV->addPart(S->content, false);
+	    SV->addPart(S->content.c_str(), false);
 	}
 
 	string_parts(SV) ::= VAR_START VAR_NAME(V) VAR_END. {
 	    SV = context->newStringValue();
-	    SV->addPart(V->content, true);
+	    SV->addPart(V->content.c_str(), true);
 	}
 
 	string_parts(RES) ::= string_parts(SV) STRING_LITERAL(S). {
-	    SV->addPart(S->content, false);
+	    SV->addPart(S->content.c_str(), false);
 	    RES = SV;
 	}
 
 	string_parts(RES) ::= string_parts(SV) VAR_START VAR_NAME(V) VAR_END. {
-	    SV->addPart(V->content, true);
+	    SV->addPart(V->content.c_str(), true);
 	    RES = SV;
 	}
 
@@ -279,7 +279,7 @@ conf(CONF) ::= ICE_DECL(ICE) REALM_DECL(REA) section_list(SL) END_TOKEN. {
 	}
 
 	reference_expr(EXPR) ::= REF_START VAR_NAME(V) REF_END. {
-	    EXPR = context->newReferenceExpr(V->content);
+	    EXPR = context->newReferenceExpr(V->content.c_str());
 	}
 
 	expr_list(LIST) ::= expr(EXPR). {
@@ -298,7 +298,7 @@ conf(CONF) ::= ICE_DECL(ICE) REALM_DECL(REA) section_list(SL) END_TOKEN. {
 /********************************************************/
 
 	assignment(A) ::= IDENTIF(NAME) SET expr(EXPR). {
-		A = context->newAssignment(NAME->content, EXPR);
+		A = context->newAssignment(NAME->content.c_str(), EXPR);
 	}
 
 	assignment_list(AL) ::= assignment(A). {
@@ -426,7 +426,7 @@ conf(CONF) ::= ICE_DECL(ICE) REALM_DECL(REA) section_list(SL) END_TOKEN. {
     }
 
 	function_call(F) ::= IDENTIF(NS) RARROW IDENTIF(NAME) LPAREN call_args(ARGS) RPAREN. {
-		F = context->newFunctionCallExpr(NS->content, NAME->content, ARGS);
+		F = context->newFunctionCallExpr(NS->content.c_str(), NAME->content.c_str(), ARGS);
 	}
 
 /********************************************************/

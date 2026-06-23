@@ -2,6 +2,7 @@
 build/
 dist/
 gen/
+valgrind/
 
 # Generated files
 *.o

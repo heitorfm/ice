@@ -17,7 +17,7 @@
 
 struct Token {
 	int type;
-	char* content;
+	std::string content;
 };
 
 enum NODE_TYPE {
